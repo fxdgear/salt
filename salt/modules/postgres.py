@@ -144,9 +144,8 @@ def db_dump(name,
     if not port:
         port = __opts__['postgres.port']
 
-    cmd = "pg_dump {name} -h {host} -U {user} -p {port}".format(
-            name=name, host=host, user=user, port=port)
-
+    cmd = 'pg_dump {0}'.format(name)
+    print cmd
     if file_name:
         cmd = "{0} -f {1}".format(cmd, file_name)
 
