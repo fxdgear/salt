@@ -99,6 +99,148 @@ def db_exists(name, user=None, host=None, port=None):
     return False
 
 
+def db_dump(name,
+            user=None,
+            host=None,
+            port=None,
+            file_name=None,
+            format=None,
+            compress=None,
+            data_only=False,
+            blobs=False,
+            clean=False,
+            create=False,
+            encoding=None,
+            schema=None,
+            exclude_schema=None,
+            oids=False,
+            no_owner=False,
+            schema_only=False,
+            superuser=None,
+            exclude_table=None,
+            table=None,
+            no_privileges=False,
+            binary_upgrade=False,
+            column_inserts=False,
+            disable_triggers=False,
+            inserts=False,
+            no_security_labels=False,
+            no_tablespaces=False,
+            no_unlogged_table_data=False,
+            quote_all_identifiers=False,
+            serializable_deferrable=False,
+            use_set_session_authorization=False,
+            ):
+
+    # check if db exists
+    if not db_exists(name, user, host, port):
+        log.info("DB '{0}' does not exist".format(name,))
+        return False
+
+    if not user:
+        user = __opts__['postgres.user']
+    if not host:
+        host = __opts__['postgres.host']
+    if not port:
+        port = __opts__['postgres.port']
+
+    cmd = "pg_dump {name} -h {host} -U {user} -p {port}".format(
+            name=name, host=host, user=user, port=port)
+
+    if file_name:
+        cmd = "{0} -f {1}".format(cmd, file_name)
+
+    if format:
+        cmd = "{0} -F {1}".format(cmd, format)
+
+    if compress:
+        try:
+            int(compress)
+        except ValueError:
+            log.error('Compress value must be an integer')
+            return False
+
+        if int(compress) > 9 or int(compress) < 0:
+            log.error('Compress value must be between 0 and 9')
+            return False
+
+        cmd = "{0} -Z {1}".format(cmd, compress)
+
+    if data_only:
+        cmd = "{0} -a".format(cmd)
+
+    if blobs:
+        cmd = "{0} -b".format(cmd)
+
+    if clean:
+        cmd = "{0} -c".format(cmd)
+
+    if create:
+        cmd = "{0} -C".format(cmd)
+
+    if encoding:
+        cmd = "{0} -E {1}".format(cmd, encoding)
+
+    if schema:
+        cmd = "{0} -n {1}".format(cmd, schema)
+
+    if exclude_schema:
+        cmd = "{0} -N {1}".format(cmd, exclude_schema)
+
+    if oids:
+        cmd = "{0} -o".format(cmd)
+
+    if no_owner:
+        cmd = "{0} -O {1}".format(cmd)
+
+    if schema_only:
+        cmd = "{0} -s {1}".format(cmd)
+
+    if superuser:
+        cmd = "{0} -S {1}".format(cmd, superuser)
+
+    if exclude_table:
+        cmd = "{0} -T {1}".format(cmd, exclude_table)
+
+    if table:
+        cmd = "{0} -t {1}".format(cmd, table)
+
+    if no_privileges:
+        cmd = "{0} -x {1}".format(cmd)
+
+    if binary_upgrade:
+        cmd = "{0} --binary-upgrade".format(cmd)
+
+    if column_inserts:
+        cmd = "{0} --column-inserts".format(cmd)
+
+    if disable_triggers:
+        cmd = "{0} --disable-triggers".format(cmd)
+
+    if inserts:
+        cmd = "{0} --inserts".format(cmd)
+
+    if no_security_labels:
+        cmd = "{0} --no-security-labels".format(cmd)
+
+    if no_tablespaces:
+        cmd = "{0} --no-tablespaces".format(cmd)
+
+    if no_unlogged_table_data:
+        cmd = "{0} --no-unlogged-table-data".format(cmd)
+
+    if quote_all_identifiers:
+        cmd = "{0} --quote-all-identifiers".format(cmd)
+
+    if serializable_deferrable:
+        cmd = "{0} --serializable-deferrable".format(cmd)
+
+    if use_set_session_authorization:
+        cmd = "{0} --use-set-session-authorization".format(cmd)
+
+    __salt__['cmd.run'](cmd)
+
+
 def db_create(name,
               user=None,
               host=None,
@@ -222,7 +364,7 @@ def user_create(username,
 
     if sub_cmd.endswith("WITH"):
         sub_cmd = sub_cmd.replace(" WITH", "")
-    
+
     cmd = 'psql -h {host} -U {user} -p {port} -c "{sub_cmd}"'.format(
         host=host, user=user, port=port, sub_cmd=sub_cmd)
     return __salt__['cmd.run'](cmd)
